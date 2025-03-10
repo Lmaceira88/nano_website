@@ -41,7 +41,7 @@ const Header = () => {
             <Link href="/login" className="text-gray-600 hover:text-primary-600 font-medium">
               Log in
             </Link>
-            <Link href="/signup" className="btn btn-primary">
+            <Link href="/onboarding" className="btn btn-primary">
               Get Started
             </Link>
           </div>
@@ -90,7 +90,7 @@ const Header = () => {
                 <Link href="/login" className="block text-gray-600 hover:text-primary-600 font-medium mb-4">
                   Log in
                 </Link>
-                <Link href="/signup" className="btn btn-primary w-full text-center">
+                <Link href="/onboarding" className="btn btn-primary w-full text-center">
                   Get Started
                 </Link>
               </div>

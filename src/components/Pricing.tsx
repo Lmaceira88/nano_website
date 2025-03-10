@@ -104,7 +104,7 @@ const Pricing = () => {
                 </ul>
                 <div className="space-y-3">
                   <Link 
-                    href={plan.id === 'enterprise' ? '/contact' : '/signup'} 
+                    href={plan.id === 'enterprise' ? '/contact' : '/onboarding'} 
                     className={`btn w-full text-center ${
                       plan.popular ? 'btn-primary' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}

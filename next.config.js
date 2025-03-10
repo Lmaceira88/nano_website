@@ -1,10 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'export',  // Enable static exports
+  swcMinify: true,
   images: {
-    domains: ['images.unsplash.com'],
-    unoptimized: true,
+    domains: ['localhost'],
   },
   // For GitHub Pages deployment
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',

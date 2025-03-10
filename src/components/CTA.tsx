@@ -15,7 +15,7 @@ const CTA = () => {
             Join hundreds of barbershops already using Project Nano to streamline their operations, increase bookings, and delight their clients.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup" className="btn bg-white text-primary-600 hover:bg-primary-50">
+            <Link href="/onboarding" className="btn bg-white text-primary-600 hover:bg-primary-50">
               Start Your Free Trial
             </Link>
             <Link href="/demo" className="btn border border-primary-300 text-white hover:bg-primary-700">

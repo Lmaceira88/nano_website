@@ -1,10 +1,13 @@
-import '@/styles/globals.css';
+import './globals.css';
+import { AuthProvider } from '@/contexts/AuthContext';
 import type { Metadata } from 'next';
-import React from 'react';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Project Nano - Professional Barbershop Management',
-  description: 'Project Nano offers a complete barbershop management solution for scheduling, payments, and customer management.',
+  title: 'ProjectNano - Appointment Management',
+  description: 'Professional appointment booking and management system',
 };
 
 export default function RootLayout({
@@ -14,8 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {children}
+      <body className={inter.className}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

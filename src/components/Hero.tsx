@@ -16,7 +16,7 @@ const Hero = () => {
               Project Nano helps barbershops streamline appointments, payments, and client management with an all-in-one platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/signup" className="btn btn-primary">
+              <Link href="/onboarding" className="btn btn-primary">
                 Get Started Free
               </Link>
               <Link href="/demo" className="btn btn-secondary">

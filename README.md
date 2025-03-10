@@ -1,140 +1,164 @@
-# Project Nano - Barbershop Management System
+# Project Nano Website
 
-Project Nano is a comprehensive barbershop management system inspired by GetSquire.com. This platform helps barbershops streamline their operations, increase bookings, and enhance client satisfaction.
+A Next.js website for Project Nano, a multi-tenant SaaS barbershop management platform.
+
+## Overview
+
+This website serves as both the marketing site and onboarding platform for Project Nano. It collects necessary information to create accounts, provision tenants, and redirect users to their dedicated tenant instances.
+
+## Multi-Tenant Architecture
+
+Project Nano follows a multi-tenant SaaS architecture:
+
+1. **Marketing Website & Central API** (This Repository):
+   - Landing pages and marketing content
+   - 4-step onboarding process
+   - Account creation and billing setup
+   - Tenant provisioning
+   - Central user management
+
+2. **Tenant Applications** (Served from ProjectNano.co.uk):
+   - Isolated tenant instances
+   - Tenant-specific data
+   - Each tenant gets a unique subdomain
+   - In production: `{tenant-subdomain}.projectnano.co.uk`
+   - In development: `/app?tenant={tenant-id}`
 
 ## Features
 
-- **Online Booking System**: Allow clients to book appointments 24/7
-- **Client Management**: Keep track of client preferences and history
-- **Payment Processing**: Accept payments online and in-person
-- **Staff Management**: Manage staff schedules and performance
-- **Automated Reminders**: Reduce no-shows with SMS and email reminders
-- **Reporting & Analytics**: Gain insights into your business performance
+- Responsive, modern UI built with Next.js and Tailwind CSS
+- Multi-step onboarding process with form validation
+- Tenant provisioning system
+- Multi-tenant architecture with subdomain isolation
+- JWT-based authentication with tenant context
 
-## Tech Stack
+## Installation
 
-- Next.js 14.2.24
-- React 18
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18.0.0 or later
-- npm or yarn
-
-### Installation
-
-1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/project-nano.git
-cd project-nano
-```
+# Clone the repository
+git clone <repository-url>
 
-2. Install dependencies
-```bash
+# Navigate to the project directory
+cd project-nano-website
+
+# Install dependencies
 npm install
-# or
-yarn install
-```
 
-3. Run the development server
-```bash
+# Run the development server
 npm run dev
-# or
-yarn dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+## Onboarding Flow
 
-## Deployment
+The onboarding process consists of four steps:
 
-### Deploy to Vercel (Recommended)
+1. **Personal Details**: Collects admin account information (first name, last name, email, phone)
+2. **Business Information**: Collects business details (name, type)
+3. **Billing Setup**: Collects payment information for post-trial billing
+4. **Service Selection**: Allows selecting an initial service offering
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com) from the creators of Next.js.
+After completing these steps, the system:
+1. Creates a user account
+2. Provisions a new tenant with a unique subdomain
+3. Sets up initial data for the tenant
+4. Redirects the user to their tenant application
 
-1. Push your code to a GitHub repository
-2. Import your project to Vercel:
-   - Go to [vercel.com](https://vercel.com)
-   - Sign up or log in with GitHub
-   - Click "New Project" and import your repository
-   - Vercel will automatically detect Next.js and set up the build configuration
-   - Click "Deploy"
+## API Integration
 
-Your site will be deployed to a URL like `https://project-nano.vercel.app` and will automatically update when you push changes to your GitHub repository.
+The website includes a central API for account creation and tenant provisioning. In development mode, it uses simulated endpoints at `/api/onboarding`.
 
-### Deploy to GitHub Pages
+### API Request Structure
 
-To deploy to GitHub Pages, you'll need to make some adjustments for Next.js:
-
-1. Install the required package:
-```bash
-npm install --save-dev gh-pages
-```
-
-2. Add the following scripts to your package.json:
 ```json
-"scripts": {
-  "build": "next build && next export",
-  "export": "next export",
-  "deploy": "next build && next export && touch out/.nojekyll && gh-pages -d out -t true"
+{
+  "admin": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "phone": "+44 7700 900000"
+  },
+  "business": {
+    "name": "Classic Cuts Barbershop",
+    "type": "Barber Shop"
+  },
+  "billing": {
+    "cardNumber": "4242424242424242",
+    "expirationDate": "12/25",
+    "cvc": "123",
+    "billingZip": "SW1A 1AA"
+  },
+  "service": {
+    "id": "silent-helmut",
+    "name": "Silent Helmut",
+    "description": "Haircut and Beard Trim with Scissors.",
+    "duration": "30 mins",
+    "price": "£29"
+  }
 }
 ```
 
-3. Create a `.github/workflows/deploy.yml` file for GitHub Actions:
-```yaml
-name: Deploy to GitHub Pages
+### API Response Structure
 
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build and Export
-        run: npm run build && npm run export
-
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@4.1.4
-        with:
-          branch: gh-pages
-          folder: out
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid-goes-here",
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Doe"
+  },
+  "tenant": {
+    "id": "tenant-uuid-here",
+    "name": "Classic Cuts Barbershop",
+    "subdomain": "classic-cuts-barbershop-123",
+    "url": "https://classic-cuts-barbershop-123.projectnano.co.uk"
+  }
+}
 ```
 
-4. Push your code to GitHub and enable GitHub Pages in your repository settings.
+## Tenant Application
 
-## Project Structure
+After successful onboarding, users are redirected to their tenant application:
+- `https://{tenant-subdomain}.projectnano.co.uk?token={JWT_TOKEN}` in production
+- `/app?tenant={tenant-id}&token={JWT_TOKEN}` in development
 
-- `/src/app`: Next.js app router pages
-- `/src/components`: Reusable React components
-- `/src/styles`: Global styles and Tailwind configuration
-- `/public`: Static assets
-- `/docs`: Documentation files
+The tenant application validates the token, verifies tenant access, and displays the appropriate user interface.
 
-## Future Enhancements
+## Environment Setup
 
-The site will be connected to projectnano.co.uk in the future.
+Create a `.env.local` file in the root directory with the following variables:
+
+```
+# Set to 'development' or 'production'
+NODE_ENV=development
+
+# URLs
+NEXT_PUBLIC_WEBSITE_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+```
+
+## Documentation
+
+For more detailed information about the multi-tenant architecture and integration, see:
+- [ProjectNano Integration Documentation](docs/projectnano-integration.md)
+
+## Deployment
+
+In production, this application would be deployed to a central domain (projectnano.co.uk), while tenant applications would be deployed to subdomains using a wildcard DNS setup:
+
+- Marketing site: `projectnano.co.uk`
+- API: `api.projectnano.co.uk`
+- Tenant applications: `*.projectnano.co.uk`
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-This project is proprietary and confidential.
-
-## Contact
-
-For any inquiries, please reach out to [your-email@example.com](mailto:your-email@example.com). 
+This project is licensed under the MIT License - see the LICENSE file for details. 
