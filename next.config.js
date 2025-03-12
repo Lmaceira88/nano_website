@@ -15,7 +15,7 @@ const nextConfig = {
   
   // Experimental features
   experimental: {
-    serverActions: true,
+    // Server Actions are available by default in Next.js 14.2.4+
   },
 }
 
