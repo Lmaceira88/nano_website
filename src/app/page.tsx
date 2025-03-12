@@ -94,17 +94,11 @@ export default function Home() {
                 <div className="relative">
                   <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-400 rounded-lg blur opacity-20"></div>
                   <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg">
-                    <Image
-                      src="/images/booking-dashboard.jpg"
-                      alt="Project Nano Appointment Management Dashboard"
-                      width={600}
-                      height={400}
-                      className="w-full h-auto"
-                      priority
-                      onError={(e) => {
-                        e.currentTarget.src = "https://placehold.co/600x400/f8fafc/1e40af?text=Booking+Dashboard";
-                      }}
-                    />
+                    <div 
+                      className="w-full h-[400px] bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center"
+                    >
+                      <div className="text-blue-600 font-bold text-xl">Booking Dashboard</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -147,16 +141,11 @@ export default function Home() {
               <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:border-blue-500 hover:shadow-md transition-all">
                 <div className="flex justify-center mb-6">
                   <div className="rounded-full bg-blue-100 p-3">
-                    <Image 
-                      src="/icons/business-icon.png" 
-                      alt="Business Owners"
-                      width={80}
-                      height={80}
-                      className="rounded-full"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://placehold.co/80/dbeafe/1e40af?text=Owner";
-                      }}
-                    />
+                    <div 
+                      className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold"
+                    >
+                      Owner
+                    </div>
                   </div>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">For Business Owners</h3>
@@ -192,16 +181,11 @@ export default function Home() {
               <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:border-blue-500 hover:shadow-md transition-all">
                 <div className="flex justify-center mb-6">
                   <div className="rounded-full bg-blue-100 p-3">
-                    <Image 
-                      src="/icons/professional-icon.png" 
-                      alt="Service Professionals"
-                      width={80}
-                      height={80}
-                      className="rounded-full"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://placehold.co/80/dbeafe/1e40af?text=Pro";
-                      }}
-                    />
+                    <div 
+                      className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold"
+                    >
+                      Pro
+                    </div>
                   </div>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">For Service Professionals</h3>
@@ -237,16 +221,11 @@ export default function Home() {
               <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm hover:border-blue-500 hover:shadow-md transition-all">
                 <div className="flex justify-center mb-6">
                   <div className="rounded-full bg-blue-100 p-3">
-                    <Image 
-                      src="/icons/client-icon.png" 
-                      alt="Clients"
-                      width={80}
-                      height={80}
-                      className="rounded-full"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://placehold.co/80/dbeafe/1e40af?text=Client";
-                      }}
-                    />
+                    <div 
+                      className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold"
+                    >
+                      Client
+                    </div>
                   </div>
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">For Clients</h3>
@@ -376,16 +355,11 @@ export default function Home() {
               <div className="relative">
                 <div className="relative bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Appointment Calendar</h3>
-                  <Image
-                    src="/calendar-view.jpg"
-                    alt="Appointment Calendar"
-                    width={600}
-                    height={400}
-                    className="w-full h-auto rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/600x400/f8fafc/1e40af?text=Appointment+Calendar";
-                    }}
-                  />
+                  <div 
+                    className="w-full h-[250px] bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center"
+                  >
+                    <div className="text-blue-600 font-bold">Appointment Calendar</div>
+                  </div>
                   <p className="text-gray-600 mt-4">Keep track of all appointments with our intuitive calendar interface</p>
                 </div>
               </div>
@@ -393,16 +367,11 @@ export default function Home() {
               <div className="relative">
                 <div className="relative bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Client Management</h3>
-                  <Image
-                    src="/client-management.jpg"
-                    alt="Client Management"
-                    width={600}
-                    height={400}
-                    className="w-full h-auto rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/600x400/f8fafc/1e40af?text=Client+Management";
-                    }}
-                  />
+                  <div 
+                    className="w-full h-[250px] bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center"
+                  >
+                    <div className="text-blue-600 font-bold">Client Management</div>
+                  </div>
                   <p className="text-gray-600 mt-4">Maintain client profiles, preferences, and appointment history</p>
                 </div>
               </div>
@@ -412,16 +381,11 @@ export default function Home() {
               <div className="relative">
                 <div className="relative bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Online Booking</h3>
-                  <Image
-                    src="/online-booking.jpg"
-                    alt="Online Booking System"
-                    width={600}
-                    height={400}
-                    className="w-full h-auto rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/600x400/f8fafc/1e40af?text=Online+Booking";
-                    }}
-                  />
+                  <div 
+                    className="w-full h-[250px] bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center"
+                  >
+                    <div className="text-blue-600 font-bold">Online Booking</div>
+                  </div>
                   <p className="text-gray-600 mt-4">Let clients book appointments 24/7 through your custom booking page</p>
                 </div>
               </div>
@@ -429,16 +393,11 @@ export default function Home() {
               <div className="relative">
                 <div className="relative bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Business Analytics</h3>
-                  <Image
-                    src="/analytics-dashboard.jpg"
-                    alt="Business Analytics Dashboard"
-                    width={600}
-                    height={400}
-                    className="w-full h-auto rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/600x400/f8fafc/1e40af?text=Business+Analytics";
-                    }}
-                  />
+                  <div 
+                    className="w-full h-[250px] bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center"
+                  >
+                    <div className="text-blue-600 font-bold">Business Analytics</div>
+                  </div>
                   <p className="text-gray-600 mt-4">Track revenue, appointments, and client retention with powerful analytics</p>
                 </div>
               </div>
