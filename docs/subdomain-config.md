@@ -1,134 +1,220 @@
-# Subdomain Configuration Guide
+# Subdomain Configuration
 
-This document outlines how Project Nano implements and manages subdomain-based multi-tenancy.
+This document outlines how subdomains are configured and managed in our multi-tenant application.
 
 ## Overview
 
-Project Nano uses subdomains to provide each tenant with a unique URL, enhancing the professional appearance and user experience. For example, if your business is "Salon A", your dashboard would be accessible at `salon-a.projectnano.vercel.app`.
+Our application uses subdomains to identify and route requests to specific tenants. For example, if the main domain is `projectnano.vercel.app`, a tenant with the subdomain `acme` would access the application at `acme.projectnano.vercel.app`.
 
-## How It Works
+## Vercel Configuration
 
-### Tenant Identification
+### Wildcard Domains
 
-1. **Middleware Detection**: Our Next.js middleware automatically detects the subdomain from the incoming request's hostname.
-2. **Tenant Lookup**: The subdomain is used to look up the corresponding tenant ID in the database.
-3. **Context Propagation**: The tenant ID is added to request headers and made available throughout the application.
+To support subdomains, we configure wildcard domains in Vercel. This is done through:
 
-### Implementation Components
+1. The Vercel project settings in the dashboard
+2. The GitHub Actions workflow file:
 
-- **Middleware (`src/middleware.ts`)**: Handles subdomain detection and tenant resolution
-- **TenantContext (`src/contexts/TenantContext.tsx`)**: Provides tenant information to all components
-- **Database Schema**: Includes a `subdomain` column in the `tenants` table with unique constraints
-
-## Development vs. Production
-
-### Development Environment
-
-In development, we support two methods:
-
-1. **Query Parameter**: Access tenants via `localhost:3000/app?tenant=uuid`
-2. **Local Subdomain Testing**: Configure your hosts file to test with `subdomain.localhost:3000`
-
-### Production Environment
-
-In production, we use true subdomain-based routing:
-
-1. **Wildcard DNS**: Configure `*.projectnano.vercel.app` to point to your application
-2. **Vercel Configuration**: Set up Vercel to handle wildcard subdomains
-3. **Tenant Resolution**: The middleware resolves the tenant based on the subdomain
-
-## Setting Up Local Subdomain Testing
-
-1. **Edit Hosts File**:
-   - Windows: Edit `C:\Windows\System32\drivers\etc\hosts`
-   - Mac/Linux: Edit `/etc/hosts`
-   - Add entries like:
-     ```
-     127.0.0.1 salon-a.localhost
-     127.0.0.1 salon-b.localhost
-     ```
-
-2. **Browser Compatibility**:
-   - Firefox works well with localhost subdomains
-   - Chrome may require additional flags for cookie support
-
-3. **Testing**:
-   - Access your test tenant at `http://salon-a.localhost:3000/app`
-   - The middleware will automatically detect and resolve the tenant
-
-## Database Schema
-
-The `tenants` table includes:
-
-```sql
-CREATE TABLE public.tenants (
-  id UUID PRIMARY KEY,
-  business_name TEXT NOT NULL,
-  business_type TEXT NOT NULL,
-  subdomain TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Index for faster lookups
-CREATE INDEX idx_tenants_subdomain ON public.tenants (subdomain);
+```yaml
+alias-domains: |
+  projectnano.vercel.app
+  *.projectnano.vercel.app
 ```
 
-## Subdomain Generation
+### vercel.json Configuration
 
-During onboarding, we:
+The `vercel.json` file contains configuration for how the application is deployed to Vercel:
 
-1. Generate a suggested subdomain from the business name
-2. Allow users to customize their subdomain
-3. Validate and ensure uniqueness
-4. Store the subdomain with the tenant record
+```json
+{
+  "version": 2,
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "github": {
+    "silent": true,
+    "autoJobCancelation": true
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}
+```
 
-## Deployment Considerations
+## Next.js Middleware
 
-When deploying to production:
+The middleware is responsible for extracting the tenant information from the subdomain and making it available to the application:
 
-1. **DNS Configuration**:
-   - Set up a wildcard DNS record (`*.projectnano.vercel.app`)
-   - Point it to your hosting provider
+```typescript
+// src/middleware.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-2. **Vercel Configuration**:
-   - In your Vercel project settings, enable wildcard domains
-   - Add your primary domain and enable wildcard subdomains
+export function middleware(request: NextRequest) {
+  const hostname = request.headers.get('host') || '';
+  const subdomain = hostname.split('.')[0];
+  
+  // Skip middleware for non-tenant routes
+  if (
+    request.nextUrl.pathname.startsWith('/_next') ||
+    request.nextUrl.pathname.startsWith('/api/auth') ||
+    request.nextUrl.pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
+  
+  // Add the tenant ID to the request headers
+  const headers = new Headers(request.headers);
+  headers.set('x-tenant-id', subdomain);
+  
+  return NextResponse.next({
+    request: {
+      headers,
+    },
+  });
+}
 
-3. **SSL Certificates**:
-   - Ensure your SSL certificate supports wildcard subdomains
-   - Vercel handles this automatically with their certificates
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+};
+```
 
-## Troubleshooting
+## Tenant Context
 
-Common issues and solutions:
+The tenant context is used to store and provide access to the tenant information throughout the application:
 
-1. **Subdomain Not Resolving**:
-   - Check DNS configuration
-   - Verify hosts file entries (for local development)
-   - Ensure middleware is correctly configured
+```typescript
+// src/contexts/tenantContext.tsx
+import { createContext, useContext, useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-2. **Cookie Issues**:
-   - Set appropriate cookie domains
-   - For local testing, use Firefox which handles localhost subdomains better
+const TenantContext = createContext(null);
 
-3. **Tenant Not Found**:
-   - Check that the subdomain exists in the database
-   - Verify the middleware is correctly querying the database
+export function TenantProvider({ children }) {
+  const [tenant, setTenant] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    async function loadTenant() {
+      const hostname = window.location.hostname;
+      const subdomain = hostname.split('.')[0];
+      
+      // Skip tenant loading for localhost
+      if (hostname === 'localhost') {
+        setTenant({ id: 'local', name: 'Local Development' });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Load tenant data from Supabase
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      );
+      
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('subdomain', subdomain)
+        .single();
+      
+      if (error) {
+        console.error('Error loading tenant', error);
+      } else {
+        setTenant(data);
+      }
+      
+      setIsLoading(false);
+    }
+    
+    loadTenant();
+  }, []);
+  
+  return (
+    <TenantContext.Provider value={{ tenant, isLoading }}>
+      {children}
+    </TenantContext.Provider>
+  );
+}
 
-## Best Practices
+export function useTenant() {
+  const context = useContext(TenantContext);
+  if (context === null) {
+    throw new Error('useTenant must be used within a TenantProvider');
+  }
+  return context;
+}
+```
 
-1. **Subdomain Validation**:
-   - Restrict characters to lowercase letters, numbers, and hyphens
-   - Avoid reserved words or potentially offensive terms
-   - Keep subdomains reasonably short
+## Local Development
 
-2. **User Experience**:
-   - Provide clear instructions during onboarding
-   - Show a preview of the subdomain URL
-   - Allow users to change their subdomain (with caution)
+For local development, you can simulate subdomains using:
 
-3. **Security**:
-   - Implement proper tenant isolation
-   - Use Row-Level Security in the database
-   - Validate tenant access on every request 
+1. **Host file modifications** to map subdomains to localhost
+2. **Query parameters** as a fallback:
+
+```
+http://localhost:3000/app?tenant=tenant-id
+```
+
+## Subdomain to Tenant Mapping
+
+The mapping of subdomains to tenants is stored in the `tenants` table in the database:
+
+```sql
+CREATE TABLE tenants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  subdomain TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add index for faster lookups
+CREATE INDEX idx_tenants_subdomain ON tenants(subdomain);
+```
+
+## Custom Domains (Future Implementation)
+
+In the future, we plan to support custom domains for tenants. This will involve:
+
+1. Adding a `custom_domain` column to the `tenants` table
+2. Configuring Vercel to handle custom domains
+3. Modifying the middleware to check both subdomains and custom domains
+
+## Testing Subdomains
+
+To test subdomains locally:
+
+1. Modify your hosts file (`/etc/hosts` on macOS/Linux, `C:\Windows\System32\drivers\etc\hosts` on Windows):
+
+```
+127.0.0.1 tenant1.localhost
+127.0.0.1 tenant2.localhost
+```
+
+2. Run the development server:
+
+```
+npm run dev
+```
+
+3. Access the application at `http://tenant1.localhost:3000` 

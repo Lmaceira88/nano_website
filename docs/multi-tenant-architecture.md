@@ -1,49 +1,112 @@
-# Multi-tenant Architecture
+# Multi-Tenant Architecture with Subdomain Support
 
-This document outlines the multi-tenant architecture implemented in Project Nano, focusing on the subdomain-based approach.
+This document outlines the architecture of our multi-tenant application with subdomain support. The application is built with Next.js and uses Supabase for backend services.
 
-## Overview
+## Architecture Overview
 
-Project Nano uses a multi-tenant architecture where each business (tenant) has its own isolated data while sharing the same application infrastructure. This approach provides:
+Our application supports multiple tenants, each with their own subdomain. For example, if the main domain is `projectnano.vercel.app`, a tenant with the subdomain `acme` would access the application at `acme.projectnano.vercel.app`.
 
-- **Data Isolation**: Each tenant's data is securely separated
-- **Shared Infrastructure**: All tenants use the same application code and infrastructure
-- **Customization**: Each tenant can have customized settings and configurations
-- **Subdomain Access**: Each tenant has a unique subdomain for accessing their dashboard
+### Key Components
 
-## Implementation Components
+1. **Next.js App Router**: Used for routing within the application.
+2. **Supabase**: Used for database, authentication, and storage.
+3. **Vercel**: Used for hosting and subdomain configuration.
 
-### 1. Tenant Identification
+## Tenant Identification
 
-Tenants are identified through:
+Tenants are identified by the subdomain in the URL. The application uses middleware to parse the hostname and extract the tenant information.
 
-- **Subdomain-based Access (Production)**: `salon-a.projectnano.vercel.app`
-- **Query Parameter-based Access (Development)**: `localhost:3000/app?tenant=uuid`
+```typescript
+// src/middleware.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-### 2. Middleware Layer
+export function middleware(request: NextRequest) {
+  const hostname = request.headers.get('host') || '';
+  const subdomain = hostname.split('.')[0];
+  
+  // Add the tenant ID to the request headers
+  const headers = new Headers(request.headers);
+  headers.set('x-tenant-id', subdomain);
+  
+  return NextResponse.next({
+    request: {
+      headers,
+    },
+  });
+}
+```
 
-The Next.js middleware (`src/middleware.ts`) handles:
+## Database Schema
 
-- Extracting the tenant identifier (subdomain or query parameter)
-- Looking up the tenant in the database
-- Adding the tenant ID to request headers
-- Redirecting unauthenticated users to login
+Each tenant has their own data isolated in the database. This is achieved using Row-Level Security (RLS) policies in Supabase.
 
-### 3. Tenant Context
+```sql
+-- Example RLS policy
+CREATE POLICY "Tenants can only access their own data"
+  ON public.appointments
+  FOR ALL
+  TO authenticated
+  USING (tenant_id = auth.jwt() -> 'app_metadata' ->> 'tenant_id');
+```
 
-The React context (`src/contexts/TenantContext.tsx`) provides:
+## Auth Flow
 
-- Tenant information to all components
-- User information associated with the tenant
-- Methods for setting and retrieving tenant data
+1. Users sign up or log in through the tenant-specific subdomain.
+2. The tenant ID is stored in the user's JWT token as part of their `app_metadata`.
+3. All database queries are scoped to the tenant ID through RLS policies.
 
-### 4. Database Structure
+## Environment Configuration
 
-The database uses:
+### Local Development
 
-- **Tenant Table**: Stores tenant information including subdomain
-- **Row-Level Security (RLS)**: Enforces data isolation at the database level
-- **Tenant ID Column**: All tables have a tenant_id column for data segregation
+For local development, we use the `.env.local` file with the following format:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Production
+
+In production, we use Vercel's environment variables and GitHub Actions secrets:
+
+```yaml
+env:
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+```
+
+## Deployment
+
+The application is deployed to Vercel using GitHub Actions. The workflow is defined in `.github/workflows/deploy.yml`.
+
+Wildcard subdomains are configured in the Vercel project settings and in the GitHub Actions workflow using the `alias-domains` option:
+
+```yaml
+alias-domains: |
+  projectnano.vercel.app
+  *.projectnano.vercel.app
+```
+
+## Access Control
+
+Access control is implemented at multiple levels:
+
+1. **Middleware**: Checks the subdomain and tenant ID.
+2. **Auth Hooks**: Validate the user's permissions.
+3. **Database RLS**: Enforces data access restrictions.
+
+## Caching Strategy
+
+- Static content is cached using Vercel's Edge Network.
+- Dynamic content is cached using SWR (stale-while-revalidate) pattern.
+- Tenant-specific data is cached with the tenant ID as part of the cache key.
+
+## Performance Considerations
+
+- Server components are used for tenant-specific data fetching to avoid exposing sensitive information to the client.
+- Client components are used for interactive elements and are wrapped in Suspense boundaries to improve loading performance.
+- API routes are optimized for multi-tenant usage by including tenant ID in the request headers.
 
 ## Data Flow
 

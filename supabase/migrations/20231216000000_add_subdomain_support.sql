@@ -108,4 +108,97 @@ SET subdomain = generate_slug(business_name) || '-' || SUBSTRING(id::text, 1, 8)
 WHERE subdomain IS NULL;
 
 -- Make subdomain not null after all existing rows have values
-ALTER TABLE public.tenants ALTER COLUMN subdomain SET NOT NULL; 
+ALTER TABLE public.tenants ALTER COLUMN subdomain SET NOT NULL;
+
+-- Add tenant_id to users table for integration with auth system
+ALTER TABLE IF EXISTS auth.users
+ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+
+-- Create policy to ensure users only see their tenant's data
+CREATE POLICY IF NOT EXISTS "Tenant isolation policy"
+ON tenants
+FOR ALL
+TO authenticated
+USING (id = auth.uid()::text::uuid OR
+       id IN (SELECT tenant_id FROM auth.users WHERE auth.uid() = id));
+
+-- Add RLS policies for tenant isolation on common tables
+-- Appointments
+ALTER TABLE IF EXISTS appointments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Tenant isolation - appointments"
+ON appointments
+FOR ALL
+TO authenticated
+USING (tenant_id = (SELECT tenant_id FROM auth.users WHERE id = auth.uid()));
+
+-- Clients
+ALTER TABLE IF EXISTS clients ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Tenant isolation - clients"
+ON clients
+FOR ALL
+TO authenticated
+USING (tenant_id = (SELECT tenant_id FROM auth.users WHERE id = auth.uid()));
+
+-- Services
+ALTER TABLE IF EXISTS services ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Tenant isolation - services"
+ON services
+FOR ALL
+TO authenticated
+USING (tenant_id = (SELECT tenant_id FROM auth.users WHERE id = auth.uid()));
+
+-- Professionals
+ALTER TABLE IF EXISTS professionals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Tenant isolation - professionals"
+ON professionals
+FOR ALL
+TO authenticated
+USING (tenant_id = (SELECT tenant_id FROM auth.users WHERE id = auth.uid()));
+
+-- Function to set tenant_id in JWT claims
+CREATE OR REPLACE FUNCTION auth.jwt()
+RETURNS jsonb
+LANGUAGE sql STABLE
+AS $$
+  SELECT
+    coalesce(
+      nullif(current_setting('request.jwt.claim', true), ''),
+      nullif(current_setting('request.jwt.claims', true), '')
+    )::jsonb
+$$;
+
+-- Trigger to set tenant_id in user metadata upon signup/login
+CREATE OR REPLACE FUNCTION public.handle_tenant_in_jwt()
+RETURNS trigger AS $$
+DECLARE
+  tenant_id_val UUID;
+BEGIN
+  -- Get the tenant_id for this user
+  SELECT tenant_id INTO tenant_id_val
+  FROM auth.users
+  WHERE id = NEW.id;
+  
+  -- Update the user's metadata with the tenant_id
+  UPDATE auth.users
+  SET raw_app_meta_data = 
+    CASE WHEN raw_app_meta_data IS NULL THEN 
+      jsonb_build_object('tenant_id', tenant_id_val::text)
+    ELSE
+      raw_app_meta_data || jsonb_build_object('tenant_id', tenant_id_val::text)
+    END
+  WHERE id = NEW.id;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger to update JWT claims on user changes
+DROP TRIGGER IF EXISTS update_tenant_jwt_claims ON auth.users;
+CREATE TRIGGER update_tenant_jwt_claims
+  AFTER INSERT OR UPDATE OF tenant_id ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_tenant_in_jwt(); 
