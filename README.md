@@ -1,5 +1,7 @@
 # Project Nano - Multi-tenant SaaS Platform
 
+[![Vercel Deployment](https://img.shields.io/badge/vercel-deployed-brightgreen.svg)](https://projectnano.co.uk)
+
 Project Nano is a comprehensive SaaS platform designed for service-based businesses. It provides a multi-tenant architecture that supports various business types with a unified dashboard experience.
 
 ## Key Features
@@ -74,8 +76,16 @@ For local testing of subdomains:
 For production deployment with subdomain support:
 
 1. Deploy to Vercel or another hosting provider that supports custom domains
-2. Configure wildcard DNS records for your domain (e.g., `*.projectnano.vercel.app`)
+2. Configure wildcard DNS records for your domain (e.g., `*.projectnano.co.uk`)
 3. Set up the appropriate environment variables for production
+
+### CI/CD with GitHub Actions
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- Automatic deployment to Vercel when changes are pushed to the main branch
+- Environment variables and secrets managed securely through GitHub
+- Production builds optimized for performance
 
 ## License
 
