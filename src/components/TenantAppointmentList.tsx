@@ -15,11 +15,11 @@ interface Appointment {
   services: {
     id: string;
     name: string;
-  };
+  }[];
   professionals: {
     id: string;
     name: string;
-  };
+  }[];
 }
 
 export default function TenantAppointmentList() {
@@ -165,12 +165,12 @@ export default function TenantAppointmentList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {appointment.services?.name || 'N/A'}
+                      {appointment.services?.map(service => service.name).join(', ') || 'N/A'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {appointment.professionals?.name || 'N/A'}
+                      {appointment.professionals?.map(professional => professional.name).join(', ') || 'N/A'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
