@@ -171,12 +171,20 @@ export default function OnboardingPage() {
         };
         localStorage.setItem('tenantInfo', JSON.stringify(tenantInfo));
         
+        // Create tenant in Supabase (in real implementation)
+        // For now, just simulate the creation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Show success message with tenant ID and subdomain URL
+        const subdomainUrl = process.env.NODE_ENV === 'production'
+          ? `https://${formData.subdomain}.projectnano.co.uk`
+          : `http://localhost:3010/app?tenant=${tenantId}`;
+        
         setSuccessMessage(`Your tenant has been created successfully!
         
         Tenant ID: ${tenantId}
         
-        Your business URL: https://${formData.subdomain}.projectnano.vercel.app
+        Your business URL: ${subdomainUrl}
         
         You'll be redirected to your dashboard in a moment...`);
       }
@@ -184,8 +192,15 @@ export default function OnboardingPage() {
       // Wait a few seconds to show the tenant ID before redirecting
       await new Promise(resolve => setTimeout(resolve, 5000));
       
-      // Redirect to the app dashboard with the tenant ID
-      router.push(`/app?tenant=${tenantId}`);
+      // In production, redirect to the tenant subdomain
+      // In development, use query parameters
+      if (process.env.NODE_ENV === 'production') {
+        // Use subdomain in production
+        window.location.href = `https://${formData.subdomain}.projectnano.co.uk/app/dashboard`;
+      } else {
+        // Use query parameters in development
+        router.push(`/app/dashboard?tenant=${tenantId}`);
+      }
     } catch (error) {
       console.error('Error during onboarding submission:', error);
       setError('Failed to complete onboarding. Please try again.');
