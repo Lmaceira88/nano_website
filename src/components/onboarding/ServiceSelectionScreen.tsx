@@ -94,17 +94,20 @@ export default function ServiceSelectionScreen({
   return (
     <div className="bg-white shadow-md rounded-lg p-8">
       {/* Progress indicator */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex space-x-2">
-          <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">✓</div>
-          <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">✓</div>
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">3</div>
+      <div className="flex justify-center mb-6">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">✓</div>
+          <div className="w-20 h-1 bg-blue-600"></div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">✓</div>
+          <div className="w-20 h-1 bg-blue-600"></div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">✓</div>
+          <div className="w-20 h-1 bg-blue-600"></div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">4</div>
         </div>
-        <div className="text-sm text-gray-500">Final Step</div>
       </div>
 
-      <h2 className="text-2xl font-bold text-center mb-2">Choose a Service</h2>
-      <p className="text-center text-gray-600 mb-6">Select a service you'll offer to your clients.</p>
+      <h1 className="text-3xl font-bold text-center text-gray-900 mb-4">Select Your Service Package</h1>
+      <p className="text-center text-gray-600 mb-8">Choose the service that best fits your business needs.</p>
 
       {/* Information box about final step */}
       <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
@@ -123,13 +126,13 @@ export default function ServiceSelectionScreen({
             key={service.id}
             className={`cursor-pointer border rounded-lg p-4 transition-all ${
               selectedServiceObj?.id === service.id
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-blue-500 bg-blue-50 shadow-md'
                 : 'border-gray-200 hover:border-blue-300'
             }`}
             onClick={() => handleSelectService(service)}
           >
             <div className="flex justify-between items-start">
-              <h3 className="font-semibold text-lg">{service.name}</h3>
+              <h3 className={`font-semibold text-lg ${selectedServiceObj?.id === service.id ? 'text-blue-700' : 'text-gray-800'}`}>{service.name}</h3>
               <span className="text-blue-600 font-medium">{service.price}</span>
             </div>
             <p className="text-gray-600 mt-1">{service.description}</p>
@@ -142,7 +145,7 @@ export default function ServiceSelectionScreen({
         <button
           type="button"
           onClick={onBack}
-          className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+          className="px-4 py-2 text-gray-800 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
         >
           Back
         </button>

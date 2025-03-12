@@ -1,4 +1,4 @@
-import RegisterForm from '@/components/auth/RegisterForm';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export const metadata = {
@@ -7,8 +7,12 @@ export const metadata = {
 };
 
 export default function RegisterPage() {
+  // Server-side redirect to the new unified onboarding flow
+  redirect('/onboarding');
+
+  // This code below won't execute due to the redirect, but is kept for fallback
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Link href="/" className="flex items-center space-x-2">
@@ -22,25 +26,22 @@ export default function RegisterPage() {
         </div>
         
         <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-          Create your account
+          Redirecting to onboarding...
         </h2>
         <p className="mt-2 text-center text-sm text-gray-400">
-          Get started with your ProjectNano admin account
+          Please wait while we redirect you to our new unified onboarding experience
         </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <RegisterForm />
+        
+        <div className="mt-8 flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        </div>
         
         <div className="mt-6 text-center">
           <Link 
-            href="http://localhost:5174/" 
-            className="text-gray-400 hover:text-white flex items-center justify-center space-x-1"
+            href="/onboarding" 
+            className="text-blue-400 hover:text-blue-300 font-medium"
           >
-            <span>Visit ProjectNano Dashboard</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            Click here if you're not redirected automatically
           </Link>
         </div>
       </div>

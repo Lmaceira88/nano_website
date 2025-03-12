@@ -50,15 +50,24 @@ export default function BusinessInfoScreen({
   ];
 
   const validateForm = () => {
-    if (!businessName || !businessType) {
-      setFormErrors({
-        businessName: 'Business name is required',
-        businessType: 'Business type is required'
-      });
-      return false;
+    let valid = true;
+    const newErrors = {
+      businessName: '',
+      businessType: ''
+    };
+    
+    if (!formValues.businessName.trim()) {
+      newErrors.businessName = 'Business name is required';
+      valid = false;
     }
     
-    return true;
+    if (!formValues.businessType) {
+      newErrors.businessType = 'Business type is required';
+      valid = false;
+    }
+    
+    setFormErrors(newErrors);
+    return valid;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -67,6 +76,14 @@ export default function BusinessInfoScreen({
       ...prev,
       [name]: value
     }));
+    
+    // Clear error when field is changed
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleContinue = (e: React.FormEvent) => {
@@ -79,16 +96,16 @@ export default function BusinessInfoScreen({
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-white">
       <div className="flex justify-center mb-6">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold">✓</div>
-          <div className="w-20 h-1 bg-primary-600"></div>
-          <div className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold">2</div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">✓</div>
+          <div className="w-20 h-1 bg-blue-600"></div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">✓</div>
+          <div className="w-20 h-1 bg-blue-600"></div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">3</div>
           <div className="w-20 h-1 bg-gray-300"></div>
-          <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-semibold">3</div>
-          <div className="w-20 h-1 bg-gray-300"></div>
-          <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-semibold">4</div>
+          <div className="w-8 h-8 bg-gray-300 text-gray-700 rounded-full flex items-center justify-center font-semibold">4</div>
         </div>
       </div>
 
@@ -107,8 +124,8 @@ export default function BusinessInfoScreen({
             value={formValues.businessName}
             onChange={handleChange}
             placeholder="e.g., Classic Cuts Barbershop"
-            className={`w-full px-4 py-3 rounded-lg border ${formErrors.businessName ? 'border-red-500' : 'border-gray-300'} focus:ring-primary-500 focus:border-primary-500`}
-            required
+            className={`w-full px-4 py-3 rounded-lg border bg-white ${formErrors.businessName ? 'border-red-500' : 'border-gray-300'} focus:ring-blue-500 focus:border-blue-500`}
+            autoComplete="organization"
           />
           {formErrors.businessName && <p className="mt-1 text-sm text-red-500">{formErrors.businessName}</p>}
         </div>
@@ -122,8 +139,7 @@ export default function BusinessInfoScreen({
             name="businessType"
             value={formValues.businessType}
             onChange={handleChange}
-            className={`w-full px-4 py-3 rounded-lg border ${formErrors.businessType ? 'border-red-500' : 'border-gray-300'} focus:ring-primary-500 focus:border-primary-500`}
-            required
+            className={`w-full px-4 py-3 rounded-lg border bg-white ${formErrors.businessType ? 'border-red-500' : 'border-gray-300'} focus:ring-blue-500 focus:border-blue-500`}
           >
             <option value="" disabled>Select a business type</option>
             {businessTypes.map((type, index) => (
@@ -133,16 +149,16 @@ export default function BusinessInfoScreen({
           {formErrors.businessType && <p className="mt-1 text-sm text-red-500">{formErrors.businessType}</p>}
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
           <div className="flex items-start">
             <div className="flex-shrink-0 mt-1">
-              <svg className="h-5 w-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="ml-3">
               <p className="text-sm text-gray-600">
-                Your admin account will be created with the email: <strong>{email}</strong>
+                Your admin account will be created with the email: <strong>{email || 'maceiraluis@gmail.com'}</strong>
               </p>
             </div>
           </div>
@@ -152,13 +168,13 @@ export default function BusinessInfoScreen({
           <button
             type="button"
             onClick={onBack}
-            className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+            className="bg-gray-100 border border-gray-300 text-gray-800 hover:bg-gray-200 font-semibold py-3 px-6 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
           >
             Back
           </button>
           <button
             type="submit"
-            className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           >
             Next
           </button>

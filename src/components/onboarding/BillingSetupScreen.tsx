@@ -217,9 +217,15 @@ const BillingSetupScreen: React.FC<BillingSetupScreenProps> = ({
         </div>
 
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">
-            Your card will not be charged until after the 7-day trial. You can cancel anytime.
+          <p className="text-sm text-gray-600 mb-2">
+            <strong>Your card will not be charged until after the 7-day trial.</strong> You can cancel anytime without being charged.
           </p>
+          <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
+            <li>Immediate access to all features upon completing signup</li>
+            <li>You'll receive email reminders before your trial ends</li>
+            <li>Easy cancellation available in your account dashboard</li>
+            <li>No hidden fees or commitments</li>
+          </ul>
         </div>
 
         <div className="flex justify-between pt-4">

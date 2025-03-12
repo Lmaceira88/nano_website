@@ -80,18 +80,18 @@ export default function WelcomeScreen({
     <div className="p-8">
       <div className="flex justify-center mb-6">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold">1</div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">✓</div>
+          <div className="w-20 h-1 bg-blue-600"></div>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">2</div>
           <div className="w-20 h-1 bg-gray-300"></div>
-          <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-semibold">2</div>
+          <div className="w-8 h-8 bg-gray-300 text-gray-700 rounded-full flex items-center justify-center font-semibold">3</div>
           <div className="w-20 h-1 bg-gray-300"></div>
-          <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-semibold">3</div>
-          <div className="w-20 h-1 bg-gray-300"></div>
-          <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-semibold">4</div>
+          <div className="w-8 h-8 bg-gray-300 text-gray-700 rounded-full flex items-center justify-center font-semibold">4</div>
         </div>
       </div>
 
       <h1 className="text-3xl font-bold text-center text-gray-900 mb-4">Welcome to Project Nano!</h1>
-      <p className="text-center text-gray-600 mb-8">Let's get you started with your 7-day free trial. First, we'll create your admin account.</p>
+      <p className="text-center text-gray-600 mb-8">Let's get you started with your 7-day free trial. We already have your account info, now let's get some more details.</p>
       
       <form onSubmit={handleContinue} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -168,11 +168,11 @@ export default function WelcomeScreen({
         <div className="mt-8 text-center">
           <button 
             type="submit"
-            className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           >
             Continue
           </button>
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="mt-4 text-sm text-gray-400">
             By continuing, you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>

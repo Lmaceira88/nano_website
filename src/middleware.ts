@@ -19,6 +19,9 @@ const publicRoutes = [
   '/auth/forgot-password',
   '/auth/reset-password',
   '/auth/callback',
+  '/project-plan',  // Add the project plan page
+  '/pricing',       // Add pricing page
+  '/onboarding',    // Add onboarding
 ];
 
 // For testing without the Supabase auth helpers
@@ -31,7 +34,12 @@ export async function middleware(req: NextRequest) {
     const pathname = req.nextUrl.pathname;
     
     // Check if accessing root path or marketing pages - always allow
-    if (pathname === '/' || pathname.startsWith('/marketing') || pathname.startsWith('/about')) {
+    if (pathname === '/' || 
+        pathname.startsWith('/marketing') || 
+        pathname.startsWith('/about') || 
+        pathname.startsWith('/project-plan') || 
+        pathname.startsWith('/pricing') || 
+        pathname.startsWith('/onboarding')) {
       return NextResponse.next();
     }
     

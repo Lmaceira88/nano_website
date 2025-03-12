@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import AccountCreationScreen from "@/components/onboarding/AccountCreationScreen";
 import WelcomeScreen from "@/components/onboarding/WelcomeScreen";
 import BusinessInfoScreen from "@/components/onboarding/BusinessInfoScreen";
 import ServiceSelectionScreen from "@/components/onboarding/ServiceSelectionScreen";
@@ -12,6 +13,7 @@ import Footer from '@/components/Footer';
 
 // Define the steps of the onboarding process
 const ONBOARDING_STEPS = {
+  ACCOUNT_CREATION: 'account_creation',
   WELCOME: 'welcome',
   BUSINESS_INFO: 'business_info',
   SERVICE_SELECTION: 'service_selection',
@@ -24,27 +26,30 @@ const API_ENDPOINT = process.env.NODE_ENV === 'production'
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
-  const [currentStep, setCurrentStep] = useState(ONBOARDING_STEPS.WELCOME);
+  const { user, isLoading: authLoading, signUp } = useAuth();
+  const [currentStep, setCurrentStep] = useState(ONBOARDING_STEPS.ACCOUNT_CREATION);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
     businessName: "",
     businessType: "",
     selectedService: "",
   });
 
-  // Check if user is authenticated
+  // Check if user is already authenticated, if so, skip account creation
   useEffect(() => {
-    if (!authLoading && !user) {
-      // Redirect to login if not authenticated
-      router.push('/auth/login');
-    } else if (user) {
+    if (!authLoading && user) {
+      // User is already logged in, skip to welcome or business info
+      setCurrentStep(ONBOARDING_STEPS.WELCOME);
+      
       // Pre-fill form data from user metadata if available
       const metadata = user.user_metadata;
       if (metadata) {
@@ -57,18 +62,27 @@ export default function OnboardingPage() {
         }));
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading]);
 
   const handleNextStep = () => {
-    if (currentStep === ONBOARDING_STEPS.WELCOME) {
+    if (currentStep === ONBOARDING_STEPS.ACCOUNT_CREATION) {
+      setCurrentStep(ONBOARDING_STEPS.WELCOME);
+    } else if (currentStep === ONBOARDING_STEPS.WELCOME) {
       setCurrentStep(ONBOARDING_STEPS.BUSINESS_INFO);
     } else if (currentStep === ONBOARDING_STEPS.BUSINESS_INFO) {
       setCurrentStep(ONBOARDING_STEPS.SERVICE_SELECTION);
     }
+    // We'll handle moving beyond SERVICE_SELECTION in handleSubmit
   };
 
   const handlePrevStep = () => {
-    if (currentStep === ONBOARDING_STEPS.BUSINESS_INFO) {
+    if (currentStep === ONBOARDING_STEPS.WELCOME) {
+      // Only go back to account creation if user isn't already logged in
+      if (!user) {
+        setCurrentStep(ONBOARDING_STEPS.ACCOUNT_CREATION);
+      }
+      // Otherwise, there's no previous step for an existing user
+    } else if (currentStep === ONBOARDING_STEPS.BUSINESS_INFO) {
       setCurrentStep(ONBOARDING_STEPS.WELCOME);
     } else if (currentStep === ONBOARDING_STEPS.SERVICE_SELECTION) {
       setCurrentStep(ONBOARDING_STEPS.BUSINESS_INFO);
@@ -77,6 +91,23 @@ export default function OnboardingPage() {
 
   const handleUpdateFormData = (data: Partial<typeof formData>) => {
     setFormData(prev => ({ ...prev, ...data }));
+  };
+
+  const handleCreateAccount = async (email: string, password: string) => {
+    // Call Auth Context's signUp method to create the account
+    const metadata = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      created_at: new Date().toISOString(),
+    };
+    
+    try {
+      const { error, user } = await signUp(email, password, metadata);
+      return { error };
+    } catch (err: any) {
+      console.error("Account creation error:", err);
+      return { error: err };
+    }
   };
 
   const handleSubmit = async () => {
@@ -113,11 +144,43 @@ export default function OnboardingPage() {
       // For now, simulate a successful response
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate getting a token back from the API
-      const token = `sim_${Math.random().toString(36).substring(2, 15)}`;
+      // Generate a proper UUID for tenant ID using crypto API
+      // This matches the UUID format we use in Supabase
+      const generateUUID = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0, 
+                v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      };
       
-      // Redirect to the dashboard with the token
-      router.push(`/dashboard?token=${token}`);
+      const tenantId = generateUUID();
+      
+      // Store tenant ID in localStorage for future use
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('currentTenantId', tenantId);
+        
+        // Create basic tenant info to display in dashboard
+        const tenantInfo = {
+          id: tenantId,
+          name: formData.businessName,
+          type: formData.businessType,
+        };
+        localStorage.setItem('tenantInfo', JSON.stringify(tenantInfo));
+        
+        // Show success message with tenant ID
+        setSuccessMessage(`Your tenant has been created successfully!
+        
+        Tenant ID: ${tenantId}
+        
+        You'll be redirected to your dashboard in a moment...`);
+      }
+      
+      // Wait a few seconds to show the tenant ID before redirecting
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      // Redirect to the app dashboard with the tenant ID
+      router.push(`/app?tenant=${tenantId}`);
     } catch (error) {
       console.error('Error during onboarding submission:', error);
       setError('Failed to complete onboarding. Please try again.');
@@ -127,6 +190,18 @@ export default function OnboardingPage() {
 
   const renderStep = () => {
     switch (currentStep) {
+      case ONBOARDING_STEPS.ACCOUNT_CREATION:
+        return (
+          <AccountCreationScreen
+            email={formData.email}
+            firstName={formData.firstName}
+            lastName={formData.lastName}
+            password={formData.password}
+            onUpdate={handleUpdateFormData}
+            onNext={handleNextStep}
+            onAccountCreate={handleCreateAccount}
+          />
+        );
       case ONBOARDING_STEPS.WELCOME:
         return (
           <WelcomeScreen
@@ -174,14 +249,33 @@ export default function OnboardingPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gray-50 py-12">
+      <main className="min-h-screen bg-gray-100 py-12">
         <div className="container-custom">
           <div className="max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-            {renderStep()}
+            {successMessage ? (
+              <div className="p-8 text-center">
+                <div className="mb-6 flex justify-center">
+                  <div className="rounded-full bg-green-100 p-3">
+                    <svg className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Onboarding Complete!</h2>
+                <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-lg text-left">
+                  <p className="text-gray-800 whitespace-pre-line">{successMessage}</p>
+                </div>
+                <div className="animate-pulse text-gray-500">
+                  Redirecting...
+                </div>
+              </div>
+            ) : (
+              renderStep()
+            )}
             
             {/* Loading message that appears when submitting form */}
-            {isLoading && (
-              <LoadingOverlay message="Creating your account on projectnano.co.uk..." />
+            {isLoading && !successMessage && (
+              <LoadingOverlay message="Creating your business on projectnano.co.uk..." />
             )}
             
             {error && (

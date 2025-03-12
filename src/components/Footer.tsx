@@ -5,15 +5,15 @@ import Link from 'next/link';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white pt-16 pb-8">
-      <div className="container-custom">
+    <footer className="bg-gray-900 text-white pt-16 pb-8 px-4">
+      <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
               <span className="text-2xl font-bold text-white">Project Nano</span>
             </Link>
             <p className="text-gray-400 mb-6 max-w-md">
-              The all-in-one barbershop management platform that helps you streamline operations, increase bookings, and delight your clients.
+              The all-in-one appointment management platform that helps you streamline operations, increase bookings, and delight your clients.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white">
@@ -43,27 +43,27 @@ const Footer = () => {
               <li><Link href="#features" className="text-gray-400 hover:text-white">Features</Link></li>
               <li><Link href="#pricing" className="text-gray-400 hover:text-white">Pricing</Link></li>
               <li><Link href="/demo" className="text-gray-400 hover:text-white">Demo</Link></li>
-              <li><Link href="/integrations" className="text-gray-400 hover:text-white">Integrations</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">Integrations</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
-              <li><Link href="/blog" className="text-gray-400 hover:text-white">Blog</Link></li>
-              <li><Link href="/guides" className="text-gray-400 hover:text-white">Guides</Link></li>
-              <li><Link href="/support" className="text-gray-400 hover:text-white">Support</Link></li>
-              <li><Link href="/api" className="text-gray-400 hover:text-white">API</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">Blog</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">Guides</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">Support</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">API</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
-              <li><Link href="/about" className="text-gray-400 hover:text-white">About</Link></li>
-              <li><Link href="/careers" className="text-gray-400 hover:text-white">Careers</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">About</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">Careers</Link></li>
               <li><Link href="/contact" className="text-gray-400 hover:text-white">Contact</Link></li>
-              <li><Link href="/legal" className="text-gray-400 hover:text-white">Legal</Link></li>
+              <li><Link href="#" className="text-gray-400 hover:text-white">Legal</Link></li>
             </ul>
           </div>
         </div>
@@ -74,13 +74,13 @@ const Footer = () => {
               &copy; {new Date().getFullYear()} Project Nano. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="text-gray-400 hover:text-white text-sm">
+              <Link href="#" className="text-gray-400 hover:text-white text-sm">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-gray-400 hover:text-white text-sm">
+              <Link href="#" className="text-gray-400 hover:text-white text-sm">
                 Terms of Service
               </Link>
-              <Link href="/cookies" className="text-gray-400 hover:text-white text-sm">
+              <Link href="#" className="text-gray-400 hover:text-white text-sm">
                 Cookie Policy
               </Link>
             </div>
