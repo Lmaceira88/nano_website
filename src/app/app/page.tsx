@@ -16,7 +16,7 @@ interface User {
 export default function TenantDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { tenantId, tenantInfo, user, loading: tenantLoading, error: tenantError } = useTenant();
+  const { tenantId, tenantInfo, user, isLoading: tenantLoading, error: tenantError } = useTenant();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -232,7 +232,7 @@ export default function TenantDashboard() {
       {/* Tenant greeting */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          Hello, {user?.firstName || 'there'}!
+          Hello, {user?.name || 'there'}!
         </h1>
         <p className="text-gray-600">
           Here's what's happening at {tenantInfo?.name || 'your business'} today
