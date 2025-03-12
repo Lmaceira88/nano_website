@@ -62,6 +62,7 @@ export function clearTenantContext(): void {
 
 // Supabase client with tenant context
 let supabaseClientWithTenant: SupabaseClient | null = null;
+let currentStoredTenantId: string | null = null;
 
 export function initSupabaseWithTenant(tenantId?: string): SupabaseClient {
   // Use provided tenantId or try to get from context
@@ -72,11 +73,8 @@ export function initSupabaseWithTenant(tenantId?: string): SupabaseClient {
   }
   
   // If client already exists with same tenant, return it
-  if (supabaseClientWithTenant) {
-    const storedTenantId = supabaseClientWithTenant.headers?.['x-tenant-id'];
-    if (storedTenantId === currentTenantId) {
-      return supabaseClientWithTenant;
-    }
+  if (supabaseClientWithTenant && currentStoredTenantId === currentTenantId) {
+    return supabaseClientWithTenant;
   }
   
   // Create new Supabase client with tenant context
@@ -95,8 +93,9 @@ export function initSupabaseWithTenant(tenantId?: string): SupabaseClient {
     }
   });
   
-  // Store client for reuse
+  // Store client and tenant ID for reuse
   supabaseClientWithTenant = client;
+  currentStoredTenantId = currentTenantId;
   
   return client;
 }
