@@ -95,7 +95,7 @@ export default function Home() {
                   <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-400 rounded-lg blur opacity-20"></div>
                   <div className="relative bg-white border border-gray-200 rounded-lg overflow-hidden shadow-lg">
                     <Image
-                      src="/booking-dashboard.jpg"
+                      src="/images/booking-dashboard.jpg"
                       alt="Project Nano Appointment Management Dashboard"
                       width={600}
                       height={400}
@@ -148,7 +148,7 @@ export default function Home() {
                 <div className="flex justify-center mb-6">
                   <div className="rounded-full bg-blue-100 p-3">
                     <Image 
-                      src="/business-icon.png" 
+                      src="/icons/business-icon.png" 
                       alt="Business Owners"
                       width={80}
                       height={80}
@@ -193,7 +193,7 @@ export default function Home() {
                 <div className="flex justify-center mb-6">
                   <div className="rounded-full bg-blue-100 p-3">
                     <Image 
-                      src="/professional-icon.png" 
+                      src="/icons/professional-icon.png" 
                       alt="Service Professionals"
                       width={80}
                       height={80}
@@ -238,7 +238,7 @@ export default function Home() {
                 <div className="flex justify-center mb-6">
                   <div className="rounded-full bg-blue-100 p-3">
                     <Image 
-                      src="/client-icon.png" 
+                      src="/icons/client-icon.png" 
                       alt="Clients"
                       width={80}
                       height={80}
