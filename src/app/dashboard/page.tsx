@@ -8,7 +8,7 @@ import LoadingOverlay from '@/components/common/LoadingOverlay';
 import SearchParamsProvider from '@/components/common/SearchParamsProvider';
 
 // ProjectNano application URL - update if needed
-const PROJECT_NANO_URL = 'http://localhost:5174';
+const PROJECT_NANO_URL = process.env.NEXT_PUBLIC_PROJECTNANO_URL || 'https://projectnano.co.uk';
 
 // Page component with SearchParamsProvider
 export default function DashboardPage() {

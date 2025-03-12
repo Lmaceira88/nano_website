@@ -82,7 +82,7 @@ function LoginFormImpl() {
     <div className="max-w-md w-full mx-auto p-6 bg-gray-800 rounded-lg shadow-md border border-gray-700">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-white">Log In</h2>
-        <Link href="http://localhost:5174/" className="text-sm text-gray-300 hover:text-white">
+        <Link href={process.env.NEXT_PUBLIC_PROJECTNANO_URL || 'https://projectnano.co.uk'} className="text-sm text-gray-300 hover:text-white">
           Go to ProjectNano →
         </Link>
       </div>

@@ -34,7 +34,7 @@ export default function LoginPage() {
         
         <div className="mt-6 text-center">
           <Link 
-            href="http://localhost:5174/" 
+            href={process.env.NEXT_PUBLIC_PROJECTNANO_URL || 'https://projectnano.co.uk'} 
             className="text-gray-400 hover:text-white flex items-center justify-center space-x-1"
           >
             <span>Visit ProjectNano Dashboard</span>
