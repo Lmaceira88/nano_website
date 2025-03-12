@@ -5,8 +5,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import supabase from '@/utils/supabaseClient';
 import { AUTH_CONFIG, isVerificationRequired } from '@/utils/authConfig';
 import Link from 'next/link';
+import SearchParamsProvider from '@/components/common/SearchParamsProvider';
 
 export default function LoginForm() {
+  return (
+    <SearchParamsProvider fallback={<div className="animate-pulse p-4">Loading login form...</div>}>
+      <LoginFormImpl />
+    </SearchParamsProvider>
+  );
+}
+
+function LoginFormImpl() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');

@@ -5,11 +5,22 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppConnection } from '@/utils/useAppConnection';
 import LoadingOverlay from '@/components/common/LoadingOverlay';
+import SearchParamsProvider from '@/components/common/SearchParamsProvider';
 
 // ProjectNano application URL - update if needed
 const PROJECT_NANO_URL = 'http://localhost:5174';
 
+// Page component with SearchParamsProvider
 export default function DashboardPage() {
+  return (
+    <SearchParamsProvider>
+      <DashboardContent />
+    </SearchParamsProvider>
+  );
+}
+
+// Actual content implementation
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, session, isLoading: authLoading } = useAuth();

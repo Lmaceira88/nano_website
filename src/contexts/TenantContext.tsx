@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { getTenantById, getTenantBySubdomain } from '@/utils/tenantManager';
 import type { Tenant } from '@/utils/tenantManager';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import SearchParamsProvider from '@/components/common/SearchParamsProvider';
 
 interface TenantContextType {
   tenantId: string | null;
@@ -53,7 +54,8 @@ const isValidUUID = (uuid: string): boolean => {
   return uuidRegex.test(uuid);
 };
 
-export const TenantProvider = ({ children }: TenantProviderProps) => {
+// The actual provider implementation
+const TenantProviderImpl = ({ children }: TenantProviderProps) => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -149,9 +151,17 @@ export const TenantProvider = ({ children }: TenantProviderProps) => {
         // Set tenant info - map from the Tenant type to our TenantInfo type
         const tenantData: TenantInfo = {
           id: tenant.id,
-          name: tenant.businessName,
-          type: tenant.businessType,
-          subdomain: tenant.subdomain,
+          name: tenant.businessName || '',
+          type: tenant.businessType || '',
+          subdomain: tenant.subdomain || '',
+          // Safely copy any additional properties
+          ...(Object.keys(tenant).reduce((acc, key) => {
+            if (!['id', 'businessName', 'businessType', 'subdomain'].includes(key)) {
+              // Use type assertion for safety
+              acc[key] = (tenant as any)[key];
+            }
+            return acc;
+          }, {} as Record<string, any>))
         };
         
         setTenantInfo(tenantData);
@@ -211,6 +221,15 @@ export const TenantProvider = ({ children }: TenantProviderProps) => {
     <TenantContext.Provider value={value}>
       {children}
     </TenantContext.Provider>
+  );
+};
+
+// Wrap the provider implementation with SearchParamsProvider
+export const TenantProvider = ({ children }: TenantProviderProps) => {
+  return (
+    <SearchParamsProvider>
+      <TenantProviderImpl>{children}</TenantProviderImpl>
+    </SearchParamsProvider>
   );
 };
 

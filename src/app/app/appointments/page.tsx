@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTenant } from '@/contexts/TenantContext';
+import SearchParamsProvider from '@/components/common/SearchParamsProvider';
 
 interface Appointment {
   id: string;
@@ -20,6 +21,14 @@ interface Appointment {
 }
 
 export default function AppointmentsPage() {
+  return (
+    <SearchParamsProvider>
+      <AppointmentsContent />
+    </SearchParamsProvider>
+  );
+}
+
+function AppointmentsContent() {
   const searchParams = useSearchParams();
   const { tenantId, tenantInfo } = useTenant();
   

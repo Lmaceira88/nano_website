@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTenant } from '@/contexts/TenantContext';
 import { getTenantById } from '@/utils/tenantManager';
+import SearchParamsProvider from '@/components/common/SearchParamsProvider';
 
 interface User {
   id: string;
@@ -13,7 +14,17 @@ interface User {
   lastName: string;
 }
 
-export default function TenantDashboard() {
+// Wrap page with SearchParamsProvider
+export default function AppPage() {
+  return (
+    <SearchParamsProvider>
+      <AppDashboard />
+    </SearchParamsProvider>
+  );
+}
+
+// Actual dashboard content
+function AppDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { tenantId, tenantInfo, user, isLoading: tenantLoading, error: tenantError } = useTenant();

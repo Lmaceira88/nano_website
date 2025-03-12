@@ -13,11 +13,9 @@ const nextConfig = {
   // Disable static export for pages that use client-side hooks
   output: 'standalone',
   
-  // Suppress useSearchParams suspense warnings in production build
+  // Experimental features
   experimental: {
     serverActions: true,
-    // The key below silences the warning in development, but we need to fix properly for production
-    missingSuspenseWithCSRBailout: false,
   },
 }
 
