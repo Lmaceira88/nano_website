@@ -16,11 +16,9 @@ export default function RegisterPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Link href="/" className="flex items-center space-x-2">
-            <img
-              className="h-12 w-auto"
-              src="/logo.svg"
-              alt="ProjectNano"
-            />
+            <div className="h-12 w-12 bg-blue-600 flex items-center justify-center rounded-md">
+              <span className="text-white text-2xl font-bold">P</span>
+            </div>
             <span className="text-white text-xl font-bold">ProjectNano</span>
           </Link>
         </div>
