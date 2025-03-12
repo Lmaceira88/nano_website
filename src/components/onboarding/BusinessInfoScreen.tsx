@@ -5,8 +5,9 @@ import React, { useState, useEffect } from 'react';
 interface BusinessInfoScreenProps {
   businessName: string;
   businessType: string;
+  subdomain: string;
   email: string; // For display only, not editable
-  onUpdate: (data: Partial<{ businessName: string; businessType: string }>) => void;
+  onUpdate: (data: Partial<{ businessName: string; businessType: string; subdomain: string }>) => void;
   onNext: () => void;
   onBack: () => void;
 }
@@ -14,6 +15,7 @@ interface BusinessInfoScreenProps {
 export default function BusinessInfoScreen({
   businessName,
   businessType,
+  subdomain,
   email,
   onUpdate,
   onNext,
@@ -21,21 +23,39 @@ export default function BusinessInfoScreen({
 }: BusinessInfoScreenProps) {
   const [formValues, setFormValues] = useState({
     businessName,
-    businessType
+    businessType,
+    subdomain
   });
   
   const [formErrors, setFormErrors] = useState({
     businessName: '',
-    businessType: ''
+    businessType: '',
+    subdomain: ''
   });
+
+  // Generate subdomain from business name
+  useEffect(() => {
+    if (formValues.businessName && !formValues.subdomain) {
+      const generatedSubdomain = formValues.businessName
+        .toLowerCase()
+        .replace(/[^\w\s]/gi, '')
+        .replace(/\s+/g, '-');
+      
+      setFormValues(prev => ({
+        ...prev,
+        subdomain: generatedSubdomain
+      }));
+    }
+  }, [formValues.businessName]);
 
   // Update local state when props change
   useEffect(() => {
     setFormValues({
       businessName,
-      businessType
+      businessType,
+      subdomain
     });
-  }, [businessName, businessType]);
+  }, [businessName, businessType, subdomain]);
 
   const businessTypes = [
     "Barber Shop",
@@ -53,7 +73,8 @@ export default function BusinessInfoScreen({
     let valid = true;
     const newErrors = {
       businessName: '',
-      businessType: ''
+      businessType: '',
+      subdomain: ''
     };
     
     if (!formValues.businessName.trim()) {
@@ -66,16 +87,34 @@ export default function BusinessInfoScreen({
       valid = false;
     }
     
+    if (!formValues.subdomain.trim()) {
+      newErrors.subdomain = 'Subdomain is required';
+      valid = false;
+    } else if (!/^[a-z0-9-]+$/.test(formValues.subdomain)) {
+      newErrors.subdomain = 'Subdomain can only contain lowercase letters, numbers, and hyphens';
+      valid = false;
+    }
+    
     setFormErrors(newErrors);
     return valid;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormValues(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // If changing subdomain, ensure it's lowercase and only has valid characters
+    if (name === 'subdomain') {
+      const formattedValue = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+      setFormValues(prev => ({
+        ...prev,
+        [name]: formattedValue
+      }));
+    } else {
+      setFormValues(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
     
     // Clear error when field is changed
     if (formErrors[name as keyof typeof formErrors]) {
@@ -147,6 +186,30 @@ export default function BusinessInfoScreen({
             ))}
           </select>
           {formErrors.businessType && <p className="mt-1 text-sm text-red-500">{formErrors.businessType}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="subdomain" className="block text-sm font-medium text-gray-700 mb-1">
+            Subdomain
+          </label>
+          <div className="flex items-center">
+            <input
+              type="text"
+              id="subdomain"
+              name="subdomain"
+              value={formValues.subdomain}
+              onChange={handleChange}
+              placeholder="your-business"
+              className={`flex-grow px-4 py-3 rounded-l-lg border bg-white ${formErrors.subdomain ? 'border-red-500' : 'border-gray-300'} focus:ring-blue-500 focus:border-blue-500`}
+            />
+            <span className="px-4 py-3 rounded-r-lg bg-gray-100 border border-l-0 border-gray-300 text-gray-500">
+              .projectnano.vercel.app
+            </span>
+          </div>
+          {formErrors.subdomain && <p className="mt-1 text-sm text-red-500">{formErrors.subdomain}</p>}
+          <p className="mt-1 text-xs text-gray-500">
+            This will be your unique URL for accessing your business dashboard.
+          </p>
         </div>
 
         <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">

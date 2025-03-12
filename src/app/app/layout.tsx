@@ -1,9 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { 
+  HomeIcon, 
+  CalendarIcon, 
+  UsersIcon, 
+  ScissorsIcon, 
+  UserGroupIcon, 
+  CogIcon, 
+  SupportIcon, 
+  BellIcon, 
+  XIcon, 
+  MenuIcon,
+  getPageTitle
+} from '@/components/common/Icons';
 
 // Dashboard layout for tenant applications
 export default function DashboardLayout({
@@ -242,7 +255,9 @@ export default function DashboardLayout({
         
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
-          {children}
+          <Suspense fallback={<div className="animate-pulse p-4 bg-white rounded-lg shadow">Loading page content...</div>}>
+            {children}
+          </Suspense>
         </main>
       </div>
     </div>

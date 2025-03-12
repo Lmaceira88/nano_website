@@ -3,6 +3,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { TenantProvider } from '@/contexts/TenantContext';
+import { Suspense } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <TenantProvider>
           <AuthProvider>
-            {children}
+            <Suspense fallback={<div className="p-4">Loading application...</div>}>
+              {children}
+            </Suspense>
           </AuthProvider>
         </TenantProvider>
       </body>

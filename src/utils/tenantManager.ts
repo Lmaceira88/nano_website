@@ -161,16 +161,74 @@ export function getTenantById(tenantId: string): Tenant | undefined {
 }
 
 /**
+ * Get tenant by subdomain
+ */
+export function getTenantBySubdomain(subdomain: string): Tenant | undefined {
+  console.log(`Looking for tenant with subdomain: ${subdomain}`);
+  
+  // Get from storage if we're in the browser
+  if (typeof window !== 'undefined') {
+    initTenantStorage();
+    const tenantsStr = sessionStorage.getItem('tenants') || '{}';
+    const tenants = JSON.parse(tenantsStr);
+    
+    // Find tenant with matching subdomain
+    const tenant = Object.values(tenants).find((t: any) => t.subdomain === subdomain);
+    
+    if (tenant) {
+      // Convert the string date back to a Date object
+      (tenant as any).createdAt = parseDateIfString((tenant as any).createdAt);
+      return tenant as Tenant;
+    }
+  }
+  
+  // If we're here, we didn't find the tenant
+  console.log(`Tenant not found for subdomain: ${subdomain}`);
+  
+  // For demo purposes, if the tenant wasn't found, create a mock tenant
+  // This is just for development to allow testing without completing the onboarding flow
+  const mockTenant: Tenant = {
+    id: `tenant-${Math.random().toString(36).substr(2, 9)}`,
+    subdomain: subdomain,
+    businessName: `${subdomain.charAt(0).toUpperCase() + subdomain.slice(1)} Business`,
+    businessType: 'Service Business',
+    createdAt: new Date(),
+    status: 'active',
+    adminId: 'mock-admin-id'
+  };
+  
+  // Store this mock tenant for future reference
+  if (typeof window !== 'undefined') {
+    const tenantsStr = sessionStorage.getItem('tenants') || '{}';
+    const tenants = JSON.parse(tenantsStr);
+    tenants[mockTenant.id] = mockTenant;
+    sessionStorage.setItem('tenants', JSON.stringify(tenants));
+    console.log('Created mock tenant for development:', mockTenant);
+  }
+  
+  return mockTenant;
+}
+
+/**
  * Get tenant URL
  */
 export function getTenantUrl(tenant: Tenant): string {
-  // In development, we'll use localhost with a special query param
+  // For development environment
   if (process.env.NODE_ENV === 'development') {
+    // First, try to use subdomain with localhost (for testing)
+    // Note: This requires local DNS setup or host file editing to work properly
+    // const useSubdomainInDev = false; // Set to true if you've configured local DNS
+    // if (useSubdomainInDev) {
+    //   return `http://${tenant.subdomain}.localhost:3000/app`;
+    // }
+    
+    // Otherwise, use query parameter approach for development
     return `http://localhost:3000/app?tenant=${tenant.id}`;
   }
   
-  // In production, this would use the tenant's subdomain
-  return `https://${tenant.subdomain}.projectnano.co.uk`;
+  // For production - use actual subdomains
+  // Replace with your actual domain
+  return `https://${tenant.subdomain}.projectnano.vercel.app`;
 }
 
 /**

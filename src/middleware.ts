@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
 /**
  * Middleware for handling tenant routing and context
@@ -24,64 +25,75 @@ const publicRoutes = [
   '/onboarding',    // Add onboarding
 ];
 
-// For testing without the Supabase auth helpers
+// This function runs on every request
 export async function middleware(req: NextRequest) {
-  // Initialize response
   const res = NextResponse.next();
   
-  try {
-    // Get the pathname from the URL
-    const pathname = req.nextUrl.pathname;
+  // Create Supabase client with request/response
+  const supabase = createMiddlewareClient({ req, res });
+  
+  // Get hostname (e.g. salon-a.projectnano.com or localhost:3000)
+  const hostname = req.headers.get('host') || '';
+  
+  // For local development
+  if (hostname.includes('localhost')) {
+    // Check for tenant ID in query params
+    const { searchParams } = new URL(req.url);
+    const tenantId = searchParams.get('tenant');
     
-    // Check if accessing root path or marketing pages - always allow
-    if (pathname === '/' || 
-        pathname.startsWith('/marketing') || 
-        pathname.startsWith('/about') || 
-        pathname.startsWith('/project-plan') || 
-        pathname.startsWith('/pricing') || 
-        pathname.startsWith('/onboarding')) {
-      return NextResponse.next();
-    }
-    
-    // Check if the request is for a public route
-    const isPublicRoute = publicRoutes.some(route => 
-      pathname === route || pathname.startsWith(route + '/')
-    );
-
-    // If accessing a protected route, check for session (simplified for now)
-    if (!isPublicRoute) {
-      // In a real implementation, we would check for a valid session here
-      // For now, we'll just simulate by checking for a cookie
-      const hasSession = req.cookies.has('auth-session');
+    if (tenantId) {
+      // Set tenant ID in header for the backend
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set('x-tenant-id', tenantId);
       
-      if (!hasSession) {
-        // Store the original URL to redirect after login
-        const redirectUrl = new URL('/auth/login', req.url);
-        redirectUrl.searchParams.set('redirectTo', pathname);
-        
-        return NextResponse.redirect(redirectUrl);
-      }
+      // Return response with tenant header
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
     }
-
+    
     return res;
-  } catch (error) {
-    console.error('Middleware error:', error);
-    // On error, allow the request to continue
-    return NextResponse.next();
   }
+  
+  // For production with subdomains
+  // Extract subdomain from hostname
+  const domainParts = hostname.split('.');
+  const isSubdomain = domainParts.length > 2;
+  
+  if (isSubdomain) {
+    const subdomain = domainParts[0];
+    
+    // Fetch tenant ID from subdomain
+    const { data, error } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('subdomain', subdomain)
+      .single();
+    
+    if (data?.id) {
+      // Set tenant ID in header for the backend
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set('x-tenant-id', data.id);
+      
+      // Return response with tenant header
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
+  }
+  
+  // Continue with original request
+  return res;
 }
 
-// Specify which routes this middleware applies to
+// Configure which paths the middleware runs on
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     * - api routes that should be public
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public|api/public).*)',
+    // Match all paths except certain exclusions
+    '/((?!_next/static|_next/image|favicon.ico|images|api/auth).*)',
   ],
 }; 

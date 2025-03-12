@@ -41,6 +41,7 @@ export default function OnboardingPage() {
     confirmPassword: "",
     businessName: "",
     businessType: "",
+    subdomain: "",
     selectedService: "",
   });
 
@@ -127,6 +128,7 @@ export default function OnboardingPage() {
         business: {
           name: formData.businessName,
           type: formData.businessType,
+          subdomain: formData.subdomain,
         },
         service: formData.selectedService,
       };
@@ -165,13 +167,16 @@ export default function OnboardingPage() {
           id: tenantId,
           name: formData.businessName,
           type: formData.businessType,
+          subdomain: formData.subdomain,
         };
         localStorage.setItem('tenantInfo', JSON.stringify(tenantInfo));
         
-        // Show success message with tenant ID
+        // Show success message with tenant ID and subdomain URL
         setSuccessMessage(`Your tenant has been created successfully!
         
         Tenant ID: ${tenantId}
+        
+        Your business URL: https://${formData.subdomain}.projectnano.vercel.app
         
         You'll be redirected to your dashboard in a moment...`);
       }
@@ -218,6 +223,7 @@ export default function OnboardingPage() {
           <BusinessInfoScreen
             businessName={formData.businessName}
             businessType={formData.businessType}
+            subdomain={formData.subdomain}
             email={formData.email}
             onUpdate={handleUpdateFormData}
             onNext={handleNextStep}

@@ -2,8 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getTenantById } from '@/utils/tenantManager';
+import { getTenantById, getTenantBySubdomain } from '@/utils/tenantManager';
 import type { Tenant } from '@/utils/tenantManager';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface TenantContextType {
   tenantId: string | null;
@@ -60,6 +61,7 @@ export const TenantProvider = ({ children }: TenantProviderProps) => {
   const [error, setError] = useState<string | null>(null);
   
   const searchParams = useSearchParams();
+  const supabase = createClientComponentClient();
   
   // Function to set the current tenant
   const setCurrentTenant = (id: string) => {
@@ -77,7 +79,19 @@ export const TenantProvider = ({ children }: TenantProviderProps) => {
     }
   };
   
-  // On mount, try to restore tenant from URL or localStorage
+  // Function to extract subdomain from hostname
+  const getSubdomainFromHostname = () => {
+    if (typeof window === 'undefined') return null;
+    
+    const hostname = window.location.hostname;
+    // Skip for localhost
+    if (hostname === 'localhost') return null;
+    
+    const domainParts = hostname.split('.');
+    return domainParts.length > 2 ? domainParts[0] : null;
+  };
+  
+  // On mount, try to restore tenant from URL, subdomain, or localStorage
   useEffect(() => {
     const initTenant = async () => {
       setIsLoading(true);
@@ -86,8 +100,21 @@ export const TenantProvider = ({ children }: TenantProviderProps) => {
       try {
         // First, try to get tenant ID from URL
         let id = searchParams.get('tenant');
+        let tenant = null;
         
-        // If not in URL, try localStorage
+        // Next, try to get tenant from subdomain
+        if (!id) {
+          const subdomain = getSubdomainFromHostname();
+          if (subdomain) {
+            // Get tenant info by subdomain
+            tenant = await getTenantBySubdomain(subdomain);
+            if (tenant) {
+              id = tenant.id;
+            }
+          }
+        }
+        
+        // If not in URL or subdomain, try localStorage
         if (!id && typeof window !== 'undefined') {
           id = localStorage.getItem('currentTenantId');
         }
@@ -109,19 +136,21 @@ export const TenantProvider = ({ children }: TenantProviderProps) => {
         // Set the tenant ID
         setTenantId(id);
         
-        // Try to load tenant info
-        const tenant = await getTenantById(id);
+        // Try to load tenant info if not already loaded from subdomain
         if (!tenant) {
-          setError('Tenant not found');
-          setIsLoading(false);
-          return;
+          tenant = await getTenantById(id);
+          if (!tenant) {
+            setError('Tenant not found');
+            setIsLoading(false);
+            return;
+          }
         }
         
         // Set tenant info - map from the Tenant type to our TenantInfo type
         const tenantData: TenantInfo = {
           id: tenant.id,
-          name: tenant.businessName, // Use businessName as it exists in the Tenant interface
-          type: tenant.businessType, // Use businessType as it exists in the Tenant interface
+          name: tenant.businessName,
+          type: tenant.businessType,
           subdomain: tenant.subdomain,
         };
         
@@ -132,11 +161,28 @@ export const TenantProvider = ({ children }: TenantProviderProps) => {
           localStorage.setItem('tenantInfo', JSON.stringify(tenantData));
         }
         
-        // Try to load user info from localStorage
-        if (typeof window !== 'undefined') {
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
+        // Try to load user from Supabase auth session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const userData: UserInfo = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name,
+            avatar: session.user.user_metadata?.avatar_url,
+          };
+          setUser(userData);
+          
+          // Store in localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        } else {
+          // If no session, try to load user info from localStorage
+          if (typeof window !== 'undefined') {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+              setUser(JSON.parse(storedUser));
+            }
           }
         }
         
