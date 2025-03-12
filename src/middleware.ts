@@ -27,67 +27,96 @@ const publicRoutes = [
 
 // This function runs on every request
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  
-  // Create Supabase client with request/response
-  const supabase = createMiddlewareClient({ req, res });
-  
-  // Get hostname (e.g. salon-a.projectnano.com or localhost:3000)
-  const hostname = req.headers.get('host') || '';
-  
-  // For local development
-  if (hostname.includes('localhost')) {
-    // Check for tenant ID in query params
-    const { searchParams } = new URL(req.url);
-    const tenantId = searchParams.get('tenant');
+  try {
+    const res = NextResponse.next();
     
-    if (tenantId) {
-      // Set tenant ID in header for the backend
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set('x-tenant-id', tenantId);
+    // Create Supabase client with request/response
+    const supabase = createMiddlewareClient({ req, res });
+    
+    // Get hostname (e.g. salon-a.projectnano.co.uk or localhost:3000)
+    const hostname = req.headers.get('host') || '';
+    console.log('Middleware processing hostname:', hostname);
+    
+    // For local development
+    if (hostname.includes('localhost')) {
+      // Check for tenant ID in query params
+      const { searchParams } = new URL(req.url);
+      const tenantId = searchParams.get('tenant');
       
-      // Return response with tenant header
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
+      if (tenantId) {
+        // Set tenant ID in header for the backend
+        const requestHeaders = new Headers(req.headers);
+        requestHeaders.set('x-tenant-id', tenantId);
+        
+        // Return response with tenant header
+        return NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        });
+      }
+      
+      return res;
     }
     
+    // For production with subdomains
+    // Extract subdomain from hostname
+    // Handle both projectnano.co.uk and projectnano.vercel.app domains
+    const domainParts = hostname.split('.');
+    
+    // Different logic for different domain structures
+    let isSubdomain = false;
+    let subdomain = '';
+    
+    if (hostname.includes('projectnano.co.uk')) {
+      isSubdomain = domainParts.length > 2 && domainParts[0] !== 'www';
+      subdomain = isSubdomain ? domainParts[0] : '';
+    } else if (hostname.includes('vercel.app')) {
+      // For vercel.app domains, the structure is different
+      isSubdomain = domainParts.length > 3;
+      subdomain = isSubdomain ? domainParts[0] : '';
+    }
+    
+    console.log('Subdomain detection:', { isSubdomain, subdomain });
+    
+    if (isSubdomain && subdomain) {
+      // Fetch tenant ID from subdomain
+      try {
+        const { data, error } = await supabase
+          .from('tenants')
+          .select('id')
+          .eq('subdomain', subdomain)
+          .single();
+        
+        if (error) {
+          console.error('Supabase query error:', error);
+        }
+        
+        if (data?.id) {
+          // Set tenant ID in header for the backend
+          const requestHeaders = new Headers(req.headers);
+          requestHeaders.set('x-tenant-id', data.id);
+          
+          // Return response with tenant header
+          return NextResponse.next({
+            request: {
+              headers: requestHeaders,
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching tenant from Supabase:', err);
+      }
+    }
+    
+    // If we reach here, no tenant was found or there was an error
+    // Continue with original request for main site
     return res;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    // If middleware fails, just continue with the request
+    return NextResponse.next();
   }
-  
-  // For production with subdomains
-  // Extract subdomain from hostname
-  const domainParts = hostname.split('.');
-  const isSubdomain = domainParts.length > 2;
-  
-  if (isSubdomain) {
-    const subdomain = domainParts[0];
-    
-    // Fetch tenant ID from subdomain
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('id')
-      .eq('subdomain', subdomain)
-      .single();
-    
-    if (data?.id) {
-      // Set tenant ID in header for the backend
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set('x-tenant-id', data.id);
-      
-      // Return response with tenant header
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
-    }
-  }
-  
-  // Continue with original request
-  return res;
 }
 
 // Configure which paths the middleware runs on
