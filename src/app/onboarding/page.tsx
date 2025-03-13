@@ -136,27 +136,40 @@ export default function OnboardingPage() {
       // Simulate API call to ProjectNano.co.uk
       console.log('Sending data to ProjectNano.co.uk:', onboardingData);
       
-      // In a real implementation, you would make an API call here
-      // const response = await fetch('https://api.projectnano.co.uk/onboarding', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(onboardingData),
-      // });
+      // Create the tenant in Supabase via our API
+      const response = await fetch('/api/tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.businessName,
+          subdomain: formData.subdomain,
+          businessType: formData.businessType
+        }),
+      });
       
-      // For now, simulate a successful response
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create tenant');
+      }
       
-      // Generate a proper UUID for tenant ID using crypto API
-      // This matches the UUID format we use in Supabase
-      const generateUUID = () => {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-          const r = Math.random() * 16 | 0, 
-                v = c === 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
-        });
-      };
+      const tenantData = await response.json();
+      console.log('API response:', tenantData);
       
-      const tenantId = generateUUID();
+      // Extract tenant ID from response, with fallback to generated UUID
+      let tenantId = tenantData.id;
+      
+      if (!tenantId) {
+        console.error('No tenant ID returned from API, using fallback');
+        // Generate a UUID fallback (note: this shouldn't normally happen)
+        const generateUUID = () => {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, 
+                  v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        };
+        tenantId = generateUUID();
+      }
       
       // Store tenant ID in localStorage for future use
       if (typeof window !== 'undefined') {
@@ -171,14 +184,10 @@ export default function OnboardingPage() {
         };
         localStorage.setItem('tenantInfo', JSON.stringify(tenantInfo));
         
-        // Create tenant in Supabase (in real implementation)
-        // For now, just simulate the creation
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
         // Show success message with tenant ID and subdomain URL
         const subdomainUrl = process.env.NODE_ENV === 'production'
           ? `https://${formData.subdomain}.projectnano.co.uk`
-          : `http://localhost:3010/app?tenant=${tenantId}`;
+          : `http://localhost:3000/app?tenant=${tenantId}`;
         
         setSuccessMessage(`Your tenant has been created successfully!
         

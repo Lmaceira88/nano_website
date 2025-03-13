@@ -176,17 +176,33 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Fetch the created tenant
-    const { data: tenant } = await supabase
+    // Now set the tenant_id on the user record to link them
+    const { error: updateUserError } = await supabase
+      .from('auth.users')
+      .update({ tenant_id: newTenantId })
+      .eq('id', userId);
+      
+    if (updateUserError) {
+      console.error('Error linking user to tenant:', updateUserError);
+      // We don't want to fail the whole operation if just this update fails
+      // The tenant exists and the tenant_user_access record should be created
+    }
+    
+    // Get the created tenant details
+    const { data: tenant, error: getTenantError } = await supabase
       .from('tenants')
       .select('*')
       .eq('id', newTenantId)
       .single();
+      
+    if (getTenantError) {
+      console.error('Error fetching tenant details:', getTenantError);
+      // Still return success, but without full tenant details
+      return NextResponse.json({ id: newTenantId });
+    }
     
-    return NextResponse.json(
-      { tenant, message: 'Tenant created successfully' },
-      { status: 201 }
-    );
+    // Return the tenant data
+    return NextResponse.json(tenant);
   } catch (error) {
     console.error('Error in POST /api/tenants:', error);
     return NextResponse.json(

@@ -174,6 +174,9 @@ const TenantProviderImpl = ({ children }: TenantProviderProps) => {
         // Try to load user from Supabase auth session
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
+          // Check if tenant exists in Supabase and create it if not
+          await ensureTenantExists(id, tenantData, session.user.id);
+          
           const userData: UserInfo = {
             id: session.user.id,
             email: session.user.email || '',
@@ -206,6 +209,72 @@ const TenantProviderImpl = ({ children }: TenantProviderProps) => {
     
     initTenant();
   }, [searchParams]);
+  
+  // Function to ensure tenant exists in Supabase database
+  const ensureTenantExists = async (tenantId: string, tenantInfo: TenantInfo, userId: string) => {
+    try {
+      // First check if tenant exists in Supabase
+      const { data: existingTenant, error: checkError } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('id', tenantId)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error('Error checking if tenant exists:', checkError);
+        return false;
+      }
+      
+      // If tenant doesn't exist in Supabase, create it
+      if (!existingTenant) {
+        console.log('Tenant does not exist in Supabase, creating it now...');
+        
+        // Insert into tenants table
+        const { error: insertError } = await supabase.from('tenants').insert({
+          id: tenantId,
+          name: tenantInfo.name,
+          type: tenantInfo.type,
+          subdomain: tenantInfo.subdomain,
+          admin_id: userId,
+          status: 'active'
+        });
+        
+        if (insertError) {
+          console.error('Error creating tenant in Supabase:', insertError);
+          return false;
+        }
+        
+        // Create tenant-user relationship
+        const { error: accessError } = await supabase.from('tenant_user_access').insert({
+          tenant_id: tenantId,
+          user_id: userId,
+          role: 'owner'
+        });
+        
+        if (accessError) {
+          console.error('Error creating tenant-user access:', accessError);
+          return false;
+        }
+        
+        // Update user with tenant_id
+        const { error: userError } = await supabase.auth.updateUser({
+          data: { tenant_id: tenantId }
+        });
+        
+        if (userError) {
+          console.error('Error updating user with tenant_id:', userError);
+        }
+        
+        console.log('Successfully created tenant in Supabase');
+        return true;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error in ensureTenantExists:', err);
+      return false;
+    }
+  };
   
   // Value that will be provided to consumers
   const value: TenantContextType = {

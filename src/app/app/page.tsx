@@ -177,6 +177,26 @@ function AppDashboard() {
   }
 
   if (error || tenantError) {
+    const TenantDebugLink = () => {
+      const [tenantIdParam, setTenantIdParam] = useState('');
+      
+      useEffect(() => {
+        if (typeof window !== 'undefined') {
+          setTenantIdParam(localStorage.getItem('currentTenantId') || '');
+        }
+      }, []);
+      
+      return (
+        <Link 
+          href={`/admin/tenant-debug?tenantId=${tenantIdParam}`} 
+          className="text-sm font-medium text-blue-700 hover:text-blue-600"
+        >
+          Debug Tenant Issues
+          <span aria-hidden="true"> &rarr;</span>
+        </Link>
+      );
+    };
+    
     return (
       <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-sm">
         <div className="flex">
@@ -189,11 +209,12 @@ function AppDashboard() {
             <p className="text-sm text-red-700">
               {error || tenantError}
             </p>
-            <div className="mt-4">
+            <div className="mt-4 flex space-x-4">
               <Link href="/auth/login" className="text-sm font-medium text-red-700 hover:text-red-600">
                 Go to Login
                 <span aria-hidden="true"> &rarr;</span>
               </Link>
+              <TenantDebugLink />
             </div>
           </div>
         </div>
