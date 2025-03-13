@@ -156,53 +156,78 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Start a transaction (using RPC function)
-    const { data: newTenantId, error: provisionError } = await supabase
-      .rpc('provision_tenant', {
-        tenant_name: name,
-        subdomain: subdomain,
-        business_type: businessType || 'Other',
-        admin_email: session.user.email,
-        admin_first_name: session.user.user_metadata?.first_name || 'Admin',
-        admin_last_name: session.user.user_metadata?.last_name || 'User',
-        admin_phone: session.user.user_metadata?.phone || ''
-      });
-    
-    if (provisionError || !newTenantId) {
-      console.error('Error provisioning tenant:', provisionError);
+    // MODIFIED: Create tenant directly instead of using RPC function
+    try {
+      // Insert the tenant record
+      const { data: newTenant, error: insertError } = await supabase
+        .from('tenants')
+        .insert({
+          name: name,
+          subdomain: subdomain,
+          type: businessType || 'Other',
+          admin_id: userId,
+          status: 'active'
+        })
+        .select('id')
+        .single();
+      
+      if (insertError || !newTenant) {
+        console.error('Error creating tenant:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to create tenant' },
+          { status: 500 }
+        );
+      }
+      
+      const newTenantId = newTenant.id;
+      
+      // Create tenant-user relationship
+      const { error: accessError } = await supabase
+        .from('tenant_user_access')
+        .insert({
+          tenant_id: newTenantId,
+          user_id: userId,
+          role: 'owner'
+        });
+      
+      if (accessError) {
+        console.error('Error creating tenant-user access:', accessError);
+      }
+      
+      // Update user with tenant_id
+      const { error: updateUserError } = await supabase
+        .from('auth.users')
+        .update({ tenant_id: newTenantId })
+        .eq('id', userId);
+        
+      if (updateUserError) {
+        console.error('Error linking user to tenant:', updateUserError);
+        // Continue anyway as this is not critical
+      }
+      
+      // Get the created tenant details
+      const { data: tenant, error: getTenantError } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('id', newTenantId)
+        .single();
+        
+      if (getTenantError) {
+        console.error('Error fetching tenant details:', getTenantError);
+        // Still return success, but with just the ID
+        return NextResponse.json({ id: newTenantId });
+      }
+      
+      // Return the tenant data
+      return NextResponse.json(tenant);
+      
+    } catch (error) {
+      console.error('Error in tenant creation:', error);
       return NextResponse.json(
-        { error: 'Failed to create tenant' },
+        { error: 'Failed to create tenant: Server error' },
         { status: 500 }
       );
     }
-    
-    // Now set the tenant_id on the user record to link them
-    const { error: updateUserError } = await supabase
-      .from('auth.users')
-      .update({ tenant_id: newTenantId })
-      .eq('id', userId);
-      
-    if (updateUserError) {
-      console.error('Error linking user to tenant:', updateUserError);
-      // We don't want to fail the whole operation if just this update fails
-      // The tenant exists and the tenant_user_access record should be created
-    }
-    
-    // Get the created tenant details
-    const { data: tenant, error: getTenantError } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('id', newTenantId)
-      .single();
-      
-    if (getTenantError) {
-      console.error('Error fetching tenant details:', getTenantError);
-      // Still return success, but without full tenant details
-      return NextResponse.json({ id: newTenantId });
-    }
-    
-    // Return the tenant data
-    return NextResponse.json(tenant);
   } catch (error) {
     console.error('Error in POST /api/tenants:', error);
     return NextResponse.json(

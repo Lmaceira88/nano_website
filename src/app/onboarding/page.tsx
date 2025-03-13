@@ -160,15 +160,27 @@ export default function OnboardingPage() {
       
       if (!tenantId) {
         console.error('No tenant ID returned from API, using fallback');
-        // Generate a UUID fallback (note: this shouldn't normally happen)
-        const generateUUID = () => {
-          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0, 
-                  v = c === 'x' ? r : (r & 0x3 | 0x8);
+        // Generate a proper UUID fallback (note: this shouldn't normally happen)
+        const generateUUID = (): string => {
+          // This generates a proper RFC4122 v4 compliant UUID
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c: string) => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
           });
         };
         tenantId = generateUUID();
+      }
+      
+      // Validate that it's a proper UUID format before storing
+      const validateUUID = (uuid: string): boolean => {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
+      };
+      
+      if (!validateUUID(tenantId)) {
+        console.error('Invalid UUID format:', tenantId);
+        throw new Error('Invalid tenant ID format returned from server');
       }
       
       // Store tenant ID in localStorage for future use
