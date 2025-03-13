@@ -202,7 +202,7 @@ export default function TenantDebugPage() {
                   diagnosticResults.diagnostic_tips[0].includes('correctly set up') ?
                   'text-green-600' : 'text-yellow-600'
                 }>
-                  {diagnosticResults.diagnostic_tips.filter(tip => !tip.includes('correctly set up')).length} issues
+                  {diagnosticResults.diagnostic_tips.filter((tip: string) => !tip.includes('correctly set up')).length} issues
                 </p>
               </div>
             </div>
